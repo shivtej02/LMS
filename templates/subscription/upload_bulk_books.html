@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <style>
+    .upload-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      color: green;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 15px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+
+  <div class="upload-container">
+    <h2>📚 Upload Bulk Books (Staff Only)</h2>
+
+    <!-- ✅ Show success messages from Django -->
+    {% if messages %}
+      {% for message in messages %}
+        <p class="message">✅ {{ message }}</p>
+      {% endfor %}
+    {% endif %}
+
+    <!-- ❌ Show error message (if present) -->
+    {% if message %}
+      <p class="error">❌ {{ message }}</p>
+    {% endif %}
+
+    <!-- 📤 Upload Form -->
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="upload_file" accept=".csv, .xlsx, .xls" required>
+      <button type="submit">⬆️ Upload File</button>
+    </form>
+  </div>
+{% endblock %}

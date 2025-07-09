@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">📘 My Borrowed Books</h2>
+
+    {% if borrow_records %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>#</th>
+                    <th>📖 Title</th>
+                    <th>📅 Borrow Date</th>
+                    <th>📅 Due Date</th>
+                    <th>📅 Return Date</th>
+                    <th>💰 Fine</th>
+                    <th>📘 Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in borrow_records %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ record.book_copy.book.title }}</td>
+                    <td>{{ record.borrow_date }}</td>
+                    <td>{{ record.due_date }}</td>
+                    <td>
+                        {% if record.return_date %}
+                            {{ record.return_date }}
+                        {% else %}
+                            <span class="text-muted">Not returned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if record.book_fine %}
+                            ₹{{ record.book_fine.amount }}
+                            {% if record.book_fine.paid %}
+                                <span class="badge bg-success">Paid</span>
+                            {% else %}
+                                <span class="badge bg-danger">Unpaid</span>
+                            {% endif %}
+                        {% else %}
+                            ₹0.00
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if record.return_date %}
+                            <span class="text-success">✅ Returned</span>
+                        {% else %}
+                            <span class="text-warning">📚 Borrowed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info text-center">
+            ℹ️ You have not borrowed any books yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

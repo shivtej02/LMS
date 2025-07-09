@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">👤 Welcome, {{ user.username }}</h2>
+{% if user.is_staff %}
+  <div class="text-end mb-3">
+    <a href="{% url 'books:export_borrow_records' %}" class="btn btn-sm btn-outline-secondary">
+      📤 Export Borrow Records CSV
+    </a>
+  </div>
+{% endif %}
+
+  <div class="row">
+    <!-- Left Section: User Info -->
+    <div class="col-md-6">
+      <div class="card mb-3">
+        <div class="card-header bg-primary text-white">User Information</div>
+        <div class="card-body">
+          {% if user.email %}
+            <p><strong>Email:</strong> {{ user.email }}</p>
+          {% endif %}
+          <p><strong>Username:</strong> {{ user.username }}</p>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header bg-success text-white">Subscription Details</div>
+        <div class="card-body">
+          {% if subscription %}
+            <p><strong>Plan:</strong> {{ subscription.plan.name }}</p>
+            <p><strong>Max Books:</strong> {{ subscription.plan.max_books }}</p>
+            <p><strong>Expiry Date:</strong> {{ subscription.end_date }}</p>
+          {% else %}
+            <p class="text-danger">❌ No active subscription found.</p>
+          {% endif %}
+
+          {% if is_expired %}
+            <div class="alert alert-danger mt-3">
+              ⚠️ Your subscription has expired. Please renew to continue borrowing books.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-warning">📊 Summary</div>
+        <div class="card-body">
+          <p><strong>Total Borrowed:</strong> {{ total_borrowed }}</p>
+          <p><strong>Total Returned:</strong> {{ total_returned }}</p>
+          <p><strong>Pending Returns:</strong> {{ total_pending }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Section: Borrow Records -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-info text-white">📚 Borrowed Books</div>
+        <div class="card-body">
+          {% if pending_books %}
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+               {% for record in pending_books %}
+                  <tr>
+                    <td>{{ record.book_copy.book.title }}</td>
+                    <td>{{ record.due_date }}</td>
+                    <td>
+                      {% if record.return_date %}
+                        ✅ Returned
+                      {% else %}
+                        ❌ Not Returned
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p class="text-muted">No borrowed books.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header bg-danger text-white">💰 Fine Info</div>
+        <div class="card-body">
+          <p><strong>Total Fine:</strong> ₹{{ total_fines }}</p>
+          <p><strong>Pending Fine:</strong> ₹{{ pending_fines }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

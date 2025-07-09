@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>📚 Book List</h2>
+
+    <div class="d-flex">
+      <!-- 🔍 Search Form -->
+      <form method="GET" action="{% url 'books:search_books' %}" class="d-flex me-2">
+        <input type="text" name="q" class="form-control me-2" placeholder="🔎 Search books..." required>
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+      </form>
+
+      <!-- ✅ Export CSV button (visible only to staff) -->
+      {% if user.is_staff %}
+        <a href="{% url 'books:export_books' %}" class="btn btn-success">
+          📥 Export CSV
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-info text-center">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% if book_data %}
+    <table class="table table-bordered table-striped shadow-sm">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>📖 Title</th>
+          <th>✍️ Author(s)</th>
+          <th>📗 ISBN</th>
+          <th>📂 Category</th>
+          <th>📦 Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in book_data %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+              {{ item.book.title }}
+              <br>
+              <small class="text-muted">✅ Available: {{ item.available_count }}</small>
+            </td>
+            <td>
+              {% for author in item.book.authors.all %}
+                {{ author.name }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+            <td>{{ item.book.isbn }}</td>
+            <td>{{ item.book.category.name }}</td>
+            <td>
+              {% with available_copy=item.copies|dictsort:"copy_id"|first %}
+                {% if available_copy.status == "available" %}
+                  <a href="{% url 'books:borrow_book' available_copy.id %}" class="btn btn-sm btn-outline-success">
+                    📘 Borrow
+                  </a>
+                {% else %}
+                  <span class="text-danger">❌ Not Available</span>
+                {% endif %}
+              {% endwith %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-center text-muted">😞 No books found in the library.</p>
+  {% endif %}
+</div>
+{% endblock %}

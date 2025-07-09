@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  body {
+    background-color:white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .plans-container {
+    max-width: 800px;
+    margin: auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px dark (0,0,0,0.1);
+  }
+ 
+  h2 {
+    text-align: center;
+    color:drark blue;
+    margin-bottom: 20px;
+  }
+
+  .plan {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .plan h3 {
+    margin-top: 0;
+    color:light blue;
+  }
+
+  .plan p {
+    margin: 5px 0;
+  }
+
+  .submit-button {
+    width: 100%;
+    padding: 12px;
+    background-color:green;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+
+  .submit-button:hover {
+    background-color:light green;
+  }
+</style>
+
+<div class="plans-container">
+  <h2>📚 Choose Your Subscription Plan</h2>
+
+  {% for plan in plans %}
+    <form method="POST">
+      {% csrf_token %}
+      <div class="plan">
+        <h3>{{ plan.name }}</h3>
+        <p><strong>₹{{ plan.price }}</strong> / {{ plan.duration_days }} days</p>
+        <p>📚 Max Books: {{ plan.max_books }}</p>
+        <p>💰 Fine Per Day: ₹{{ plan.fine_per_day }}</p>
+        <p>📦 Description: {{ plan.features|default:"No description available" }}</p>
+        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+        <button type="submit" class="submit-button">✅ Subscribe Now</button>
+      </div>
+    </form>
+  {% endfor %}
+</div>
+{% endblock %}

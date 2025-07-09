@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block content %}
+  <style>
+    body {
+      background-color:white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .profile-container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px red(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color:dark blue;
+      margin-bottom: 20px;
+    }
+
+    .info-row {
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .info-label {
+      font-weight: bold;
+      color: dark blue;
+    }
+
+    .profile-photo {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .profile-photo img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border: 2px solid #ddd;
+      border-radius: 50%;
+    }
+
+    .edit-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background-color:sky blue;
+      color: white;
+      text-align: center;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 1em;
+      margin-top: 30px;
+    }
+
+    .edit-btn:hover {
+      background-color:sky blue;
+    }
+
+    .message {
+      color: green;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+  </style>
+
+  <div class="profile-container">
+    <h2>👤 My Profile</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <p class="message">✅ {{ message }}</p>
+      {% endfor %}
+    {% endif %}
+
+    <div class="info-row">
+      <span class="info-label">Username:</span> {{ user.username }}
+    </div>
+
+    <div class="info-row">
+      <span class="info-label">Email:</span> {{ profile.email|default:"(not provided)" }}
+    </div>
+
+    <div class="info-row">
+      <span class="info-label">Phone:</span> {{ profile.phone_no|default:"(not set)" }}
+    </div>
+
+    <div class="info-row">
+      <span class="info-label">Emergency Contact:</span> {{ profile.emergency_contact_no|default:"(not set)" }}
+    </div>
+
+    {% if profile.photo %}
+      <div class="profile-photo">
+        <strong>📷 Profile Photo:</strong><br>
+        <img src="{{ profile.photo.url }}" alt="Profile Photo">
+      </div>
+    {% endif %}
+
+    <a href="{% url 'iam:edit_profile' %}" class="edit-btn">✏️ Edit Profile</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block content %}
+  <style>
+    body {
+      background-color:white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .fine-container {
+      max-width: 800px;
+      margin: auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color:white;
+    }
+
+    form {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    input, select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #219150;
+    }
+
+    .no-fines {
+      text-align: center;
+      color: #e74c3c;
+      font-size: 1.1em;
+    }
+
+    .message {
+      color: green;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+  </style>
+
+  <div class="fine-container">
+    <h2>💸 Pay Fines</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <p class="message">✅ {{ message }}</p>
+      {% endfor %}
+    {% endif %}
+
+    {% if fines %}
+      <table>
+        <thead>
+          <tr>
+            <th>📘 Book</th>
+            <th>🧾 Fine Amount</th>
+            <th>📅 Due Date</th>
+            <th>🔢 Borrow ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fine in fines %}
+            <tr>
+              <td>{{ fine.borrow_record.book.title }}</td>
+              <td>₹{{ fine.amount }}</td>
+              <td>{{ fine.borrow_record.due_date }}</td>
+              <td>{{ fine.borrow_record.id }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <form method="post">
+        {% csrf_token %}
+        <p><strong>💡 Tip:</strong> Enter the correct <strong>Borrow ID</strong> from the table above to pay the fine.</p>
+        {{ form.as_p }}
+        <button type="submit">✅ Pay Selected Fine</button>
+      </form>
+    {% else %}
+      <p class="no-fines">🎉 You have no unpaid fines!</p>
+    {% endif %}
+  </div>
+{% endblock %}

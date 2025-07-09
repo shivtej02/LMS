@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+  <style>
+    body {
+      background-color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .subscription-container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+
+    .plan-details {
+      font-size: 1.1em;
+      color: #2e7d32;  /* green for success */
+      line-height: 1.8;
+    }
+
+    .no-plan {
+      color: red;
+      font-size: 1.1em;
+    }
+  </style>
+
+  <div class="subscription-container">
+    <h2>📦 My Subscription</h2>
+
+    {% if subscription %}
+      <div class="plan-details">
+        <p>✅ You are subscribed to <strong>{{ subscription.plan.name }}</strong> plan</p>
+        <p>💲 <strong>Price:</strong> ₹{{ subscription.plan.price }}</p>
+        <p>📚 <strong>Max Books:</strong> {{ subscription.plan.max_books }}</p>
+        <p>📅 <strong>Duration:</strong> {{ subscription.plan.duration_days }} days</p>
+        <p>📆 <strong>Start Date:</strong> {{ subscription.start_date }}</p>
+        <p>🛑 <strong>End Date:</strong> {{ subscription.end_date }}</p>
+        <p>⚠️ <strong>Fine Per Day:</strong> ₹{{ subscription.plan.fine_per_day }}</p>
+      </div>
+    {% else %}
+      <p class="no-plan">⚠️ You do not have an active subscription.</p>
+    {% endif %}
+  </div>
+{% endblock %}

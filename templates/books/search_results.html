@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-header bg-primary text-white text-center rounded-top">
+      <h3>🔍 Search Results for: "<span class="text-warning">{{ query }}</span>"</h3>
+    </div>
+    <div class="card-body">
+      {% if book_data %}
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>#️⃣</th>
+                <th>📖 Title</th>
+                <th>✍️ Author(s)</th>
+                <th>📘 ISBN</th>
+                <th>📂 Category</th>
+                <th>📍 Location(s)</th>
+                <th>📦 Copies</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in book_data %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.book.title }}</td>
+                <td>
+                  {% for author in item.book.authors.all %}
+                    {{ author.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </td>
+                <td>{{ item.book.isbn }}</td>
+                <td>{{ item.book.category.name }}</td>
+
+                <td>
+                  {% if item.book.bookcopy_set.all %}
+                    <ul class="mb-0 ps-3">
+                      {% for copy in item.book.bookcopy_set.all %}
+                        <li>{{ copy.library_location }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+
+                <td>{{ item.total_copies }}</td>  
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-center text-muted fs-5">😞 No books found matching your search.</p>
+      {% endif %}
+    </div>
+    <div class="card-footer text-center">
+      <a href="{% url 'books:book_list' %}" class="btn btn-outline-secondary btn-sm">⬅️ Back to Book List</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

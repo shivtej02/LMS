@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block content %}
+  <style>
+    body {
+      background-color:white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .signup-container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px red(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color:blue;
+    }
+
+    fieldset {
+      border: none;
+      margin-bottom: 20px;
+    }
+
+    legend {
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-bottom: 10px;
+      color:pink;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color:green;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color:green;
+    }
+
+    .message {
+      color: red;
+      margin-bottom: 15px;
+    }
+  </style>
+
+  <div class="signup-container">
+    <h2>📝 Sign Up</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <p class="message">⚠️ {{ message }}</p>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <fieldset>
+        <legend>👤 Account Info</legend>
+        {{ user_form.as_p }}
+      </fieldset>
+
+      <fieldset>
+        <legend>📞 Profile Info</legend>
+        {{ profile_form.as_p }}
+      </fieldset>
+
+      <button type="submit">✅ Sign Up</button>
+    </form>
+  </div>
+{% endblock %}

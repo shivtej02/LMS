@@ -1,0 +1,41 @@
+<!-- templates/books/fines.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-danger text-white text-center">
+      <h3>💸 Unpaid Fines</h3>
+    </div>
+    <div class="card-body">
+      {% if fines %}
+        <table class="table table-bordered table-striped">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Book</th>
+              <th>Due Date</th>
+              <th>Returned</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fine in fines %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ fine.borrow_record.book_copy.book.title }}</td>
+                <td>{{ fine.borrow_record.due_date }}</td>
+                <td>{{ fine.borrow_record.return_date }}</td>
+                <td>₹{{ fine.amount }}</td>
+                <td>{% if fine.paid %}✅ Paid{% else %}❌ Not Paid{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-center text-muted">🎉 You have no unpaid fines.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

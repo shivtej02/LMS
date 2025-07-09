@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-header bg-success text-white text-center rounded-top">
+      <h3>📚 Recommended Books</h3>
+    </div>
+    <div class="card-body">
+      {% if books %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+          {% for book in books %}
+          <div class="col">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">📖 {{ book.title }}</h5>
+                <p class="card-text">
+                  <strong>✍️ Author(s):</strong>
+                  {% for author in book.authors.all %}
+                    {{ author.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                  <br>
+                  <strong>📘 ISBN:</strong> {{ book.isbn }}<br>
+                  <strong>📂 Category:</strong> {{ book.category.name }}
+                </p>
+              </div>
+              <div class="card-footer text-center bg-light">
+                <span class="badge bg-info text-dark">Recommended ✅</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-center text-muted fs-5">🤔 No recommended books available right now.</p>
+      {% endif %}
+    </div>
+    <div class="card-footer text-center">
+      <a href="{% url 'books:book_list' %}" class="btn btn-outline-secondary btn-sm">⬅️ Back to Book List</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+  

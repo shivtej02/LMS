@@ -5,7 +5,7 @@ app_name = 'books'
 
 urlpatterns = [
     path('book-list/', views.book_list, name='book_list'),
-    path('borrow/<int:copy_id>/', views.borrow_book, name='borrow_book'),
+    path('borrow/<int:book_id>/', views.borrow_book, name='borrow_book'),
     path('return/<int:record_id>/', views.return_book, name='return_book'),
     path('search/', views.search_books, name='search_books'),
     path('recommend/', views.book_recommendation, name='book_recommendation'),

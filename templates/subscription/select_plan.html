@@ -65,7 +65,7 @@
         <p><strong>₹{{ plan.price }}</strong> / {{ plan.duration_days }} days</p>
         <p>📚 Max Books: {{ plan.max_books }}</p>
         <p>💰 Fine Per Day: ₹{{ plan.fine_per_day }}</p>
-        <p>📦 Description: {{ plan.features|default:"No description available" }}</p>
+        {% comment %} <p>📦 Description: {{ plan.features|default:"No description available" }}</p> {% endcomment %}
         <input type="hidden" name="plan_id" value="{{ plan.id }}">
         <button type="submit" class="submit-button">✅ Subscribe Now</button>
       </div>

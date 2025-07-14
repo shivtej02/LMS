@@ -43,9 +43,8 @@
           <tr>
             <td>{{ forloop.counter }}</td>
             <td>
-              {{ item.book.title }}
-              <br>
-              <small class="text-muted">✅ Available: {{ item.available_count }}</small>
+              {{ item.book.title }}<br>
+              <small class="text-muted">✅ Available: {{ item.available_copies }}</small>
             </td>
             <td>
               {% for author in item.book.authors.all %}
@@ -54,17 +53,18 @@
             </td>
             <td>{{ item.book.isbn }}</td>
             <td>{{ item.book.category.name }}</td>
-            <td>
-              {% with available_copy=item.copies|dictsort:"copy_id"|first %}
-                {% if available_copy.status == "available" %}
-                  <a href="{% url 'books:borrow_book' available_copy.id %}" class="btn btn-sm btn-outline-success">
-                    📘 Borrow
-                  </a>
-                {% else %}
-                  <span class="text-danger">❌ Not Available</span>
-                {% endif %}
-              {% endwith %}
-            </td>
+      <td>
+  {% if item.is_allowed and item.can_borrow %}
+    <a href="{% url 'books:borrow_book' item.book.id %}" class="btn btn-sm btn-outline-success">
+      📘 Borrow
+    </a>
+  {% elif not item.can_borrow %}
+    <span class="text-danger">❌ Not Available</span>
+  {% else %}
+    <span class="text-danger">❌ Not Allowed</span>
+  {% endif %}
+</td>
+
           </tr>
         {% endfor %}
       </tbody>

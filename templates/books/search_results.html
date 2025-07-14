@@ -19,6 +19,7 @@
                 <th>📂 Category</th>
                 <th>📍 Location(s)</th>
                 <th>📦 Copies</th>
+                <th>✅ Action</th>
               </tr>
             </thead>
             <tbody>
@@ -33,7 +34,6 @@
                 </td>
                 <td>{{ item.book.isbn }}</td>
                 <td>{{ item.book.category.name }}</td>
-
                 <td>
                   {% if item.book.bookcopy_set.all %}
                     <ul class="mb-0 ps-3">
@@ -45,8 +45,21 @@
                     N/A
                   {% endif %}
                 </td>
+                <td>{{ item.book.bookcopy_set.count }}</td>
 
-                <td>{{ item.total_copies }}</td>  
+                <td>
+  {% if item.is_allowed and item.can_borrow %}
+    <a href="{% url 'books:borrow_book' item.book.id %}" class="btn btn-sm btn-outline-success">
+      📘 Borrow
+    </a>
+  {% elif not item.can_borrow %}
+    <span class="text-danger">❌ Not Available</span>
+  {% else %}
+    <span class="text-danger">❌ Not Allowed</span>
+  {% endif %}
+</td>
+
+
               </tr>
               {% endfor %}
             </tbody>

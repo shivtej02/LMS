@@ -1,29 +1,36 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.utils import timezone
+from django.views import View
+from django.views.generic import TemplateView, FormView
 
 from .models import SubscriptionPlan, StudentSubscription, Fine, BulkUpload
 from iam.models import Student
 from .forms import FinePaymentForm
 
-
 # 🔹 Select Subscription Plan
-@login_required
-def select_subscription_plan(request):
-    plans = SubscriptionPlan.objects.all()
+class SelectSubscriptionPlanView(LoginRequiredMixin, View):
+    def get(self, request):
+        plans = SubscriptionPlan.objects.all()
+        try:
+            student = Student.objects.get(user_profile__user=request.user)
+        except Student.DoesNotExist:
+            return render(request, 'books/error.html', {'message': '⚠️ Student profile not found.'})
 
-    try:
-        student = Student.objects.get(user_profile__user=request.user)
-    except Student.DoesNotExist:
-        return render(request, 'books/error.html', {'message': '⚠️ Student profile not found.'})
+        return render(request, 'subscription/select_plan.html', {'plans': plans})
 
-    if request.method == 'POST':
+    def post(self, request):
+        plans = SubscriptionPlan.objects.all()
+        try:
+            student = Student.objects.get(user_profile__user=request.user)
+        except Student.DoesNotExist:
+            return render(request, 'books/error.html', {'message': '⚠️ Student profile not found.'})
+
         plan_id = request.POST.get('plan_id')
         if plan_id:
             plan = get_object_or_404(SubscriptionPlan, id=plan_id)
 
-            # 🔍 Check if student already has active subscription
             active_sub = StudentSubscription.objects.filter(
                 student=student
             ).order_by('-start_date').first()
@@ -31,17 +38,14 @@ def select_subscription_plan(request):
             if active_sub:
                 expiry = active_sub.start_date + timezone.timedelta(days=active_sub.plan.duration_days)
                 if expiry >= timezone.now().date():
-                    # ❌ Already active plan, don't allow new
                     messages.warning(
                         request,
                         f'⚠️ You already have an active plan: {active_sub.plan.name} valid till {expiry}.'
                     )
                     return redirect('subscription:my_subscription')
 
-            # ✅ Remove expired old subscriptions (cleanup)
             StudentSubscription.objects.filter(student=student).delete()
 
-            # ✅ Create new subscription
             StudentSubscription.objects.create(
                 student=student,
                 plan=plan,
@@ -51,68 +55,61 @@ def select_subscription_plan(request):
             messages.success(request, f"🎉 Congrats! You subscribed to {plan.name} plan successfully.")
             return redirect('subscription:my_subscription')
 
-    return render(request, 'subscription/select_plan.html', {'plans': plans})
-
-
+        return render(request, 'subscription/select_plan.html', {'plans': plans})
 
 # 🔹 View My Subscription
-@login_required
-def my_subscription(request):
-    try:
-        student = Student.objects.get(user_profile__user=request.user)
-    except Student.DoesNotExist:
-        return render(request, 'books/error.html', {'message': '⚠️ Student profile not found.'})
+class MySubscriptionView(LoginRequiredMixin, TemplateView):
+    template_name = 'subscription/my_subscription.html'
 
-    subscription = StudentSubscription.objects.filter(student=student).last()
-    return render(request, 'subscription/my_subscription.html', {'subscription': subscription})
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            student = Student.objects.get(user_profile__user=self.request.user)
+            subscription = StudentSubscription.objects.filter(student=student).last()
+            context['subscription'] = subscription
+        except Student.DoesNotExist:
+            return render(self.request, 'books/error.html', {'message': '⚠️ Student profile not found.'})
+        return context
 
 # 🔹 Pay Fines
-@login_required
-def pay_fine(request):
-    try:
-        student = Student.objects.get(user_profile__user=request.user)
-    except Student.DoesNotExist:
-        return render(request, 'books/error.html', {'message': '⚠️ Student profile not found.'})
+class PayFineView(LoginRequiredMixin, FormView):
+    template_name = 'subscription/pay_fine.html'
+    form_class = FinePaymentForm
 
-    unpaid_fines = Fine.objects.filter(borrow_record__student=student, paid=False)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            student = Student.objects.get(user_profile__user=self.request.user)
+            unpaid_fines = Fine.objects.filter(borrow_record__student=student, paid=False)
+            context['fines'] = unpaid_fines
+        except Student.DoesNotExist:
+            return render(self.request, 'books/error.html', {'message': '⚠️ Student profile not found.'})
+        return context
 
-    if request.method == 'POST':
-        form = FinePaymentForm(request.POST)
-        if form.is_valid():
-            record_id = form.cleaned_data['record_id']
-            try:
-                fine = Fine.objects.get(borrow_record__id=record_id)
-                fine.paid = True
-                fine.save()
-                messages.success(request, '✅ Fine paid successfully.')
-            except Fine.DoesNotExist:
-                messages.error(request, '❌ Fine record not found.')
-            return redirect('subscription:pay_fine')
-    else:
-        form = FinePaymentForm()
-
-    return render(request, 'subscription/pay_fine.html', {
-        'fines': unpaid_fines,
-        'form': form
-    })
-
+    def form_valid(self, form):
+        record_id = form.cleaned_data['record_id']
+        try:
+            fine = Fine.objects.get(borrow_record__id=record_id)
+            fine.paid = True
+            fine.save()
+            messages.success(self.request, '✅ Fine paid successfully.')
+        except Fine.DoesNotExist:
+            messages.error(self.request, '❌ Fine record not found.')
+        return redirect('subscription:pay_fine')
 
 # 🔹 Upload Bulk Books (for Staff Only)
-@login_required
-def upload_bulk_books(request):
-    # ✅ Check if user is staff
-    if not hasattr(request.user, 'userprofile') or not hasattr(request.user.userprofile, 'staffprofile'):
-        return render(request, 'books/error.html', {
-            'message': '❌ Only staff members can upload books.'
-        })
+class UploadBulkBooksView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return hasattr(self.request.user, 'userprofile') and hasattr(self.request.user.userprofile, 'staffprofile')
 
-    if request.method == 'POST':
+    def get(self, request):
+        return render(request, 'subscription/upload_bulk_books.html')
+
+    def post(self, request):
         uploaded_file = request.FILES.get('upload_file')
         if uploaded_file:
             staff_profile = request.user.userprofile.staffprofile
             BulkUpload.objects.create(uploaded_by=staff_profile, upload_file=uploaded_file)
             messages.success(request, '✅ File uploaded successfully.')
             return redirect('subscription:upload_bulk_books')
-
-    return render(request, 'subscription/upload_bulk_books.html')
+        return render(request, 'subscription/upload_bulk_books.html')

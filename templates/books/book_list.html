@@ -53,18 +53,21 @@
             </td>
             <td>{{ item.book.isbn }}</td>
             <td>{{ item.book.category.name }}</td>
-      <td>
+<td>
   {% if item.is_allowed and item.can_borrow %}
-    <a href="{% url 'books:borrow_book' item.book.id %}" class="btn btn-sm btn-outline-success">
+    <a href="{% url 'books:borrow_book' item.book.id %}" class="btn btn-sm btn-outline-success mb-1">
       📘 Borrow
     </a>
   {% elif not item.can_borrow %}
-    <span class="text-danger">❌ Not Available</span>
+    <div class="text-danger mb-1">❌ Not Available</div>
   {% else %}
-    <span class="text-danger">❌ Not Allowed</span>
+    <div class="text-danger mb-1">❌ Not Allowed</div>
   {% endif %}
-</td>
 
+  <a href="{% url 'books:book_detail' item.book.id %}" class="btn btn-sm btn-outline-info">
+    🔍 View Details
+  </a>
+</td>
           </tr>
         {% endfor %}
       </tbody>

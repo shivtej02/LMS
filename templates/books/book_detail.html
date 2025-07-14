@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📖 Book Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">📘 Book Details</h2>
+
+    <!-- 🔹 पुस्तकाची मुख्य माहिती -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4>{{ book.title }}</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Author(s):</strong> {{ book.get_authors }}</p> <!-- लेखक -->
+            <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+            <p><strong>Category:</strong> {{ book.category.name }}</p>
+            <p><strong>Description:</strong> {{ book.description }}</p> <!-- वर्णन -->
+            <p><strong>Published:</strong> {{ book.published_date }}</p> <!-- प्रकाशन तारीख -->
+            <p><strong>Total Copies:</strong> {{ copies.count }}</p> <!-- एकूण प्रती -->
+            <p><strong>Available Copies:</strong> {{ available_copies }}</p> <!-- उपलब्ध प्रती -->
+        </div>
+    </div>
+
+    <!-- 🔹 त्या पुस्तकाच्या सर्व copies ची यादी -->
+    <h4>📦 Book Copies</h4>
+    {% if copies %}
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>#</th>
+                <th>Copy ID</th>
+                <th>Status</th>
+                <th>Location</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for copy in copies %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ copy.id }}</td>
+                <td>
+                    {% if copy.status == 'available' %}
+                        <span class="text-success">✅ Available</span>
+                    {% else %}
+                        <span class="text-danger">❌ Borrowed</span>
+                    {% endif %}
+                </td>
+                <td>{{ copy.library_location }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>this book copy is not available.</p>
+    {% endif %}
+
+    <a href="{% url 'books:book_list' %}" class="btn btn-secondary mt-3">← Back to Home</a>
+</div>
+{% endblock %}

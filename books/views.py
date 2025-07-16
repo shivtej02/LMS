@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 from django.db.models import Q
 from datetime import timedelta, date
 import csv
+import io  
 
 from .models import Book, BookCopy, BorrowRecord, Fine
 from iam.models import Student, UserProfile
@@ -26,7 +27,6 @@ class BookCopiesView(LoginRequiredMixin, View):
         })
 
 
-# 👉 इथे पेस्ट कर
 class BookDetailView(LoginRequiredMixin, View):
     def get(self, request, book_id):
         book = get_object_or_404(Book, id=book_id)
@@ -177,7 +177,7 @@ class ExportBorrowRecordsCSV(View):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="borrow_records.csv"'
         writer = csv.writer(response)
-        writer.writerow(['Student', 'Book Title', 'Borrow Date', 'Due Date', 'Return Date', 'Overdue'])
+        writer.writerow(['Student', 'Book Title', 'Borrow Date', 'Due Date', 'Return Date', 'Overdue','Fine Amount', 'Paid'])
 
         records = BorrowRecord.objects.select_related('student', 'book_copy__book').all()
         for record in records:
@@ -187,7 +187,10 @@ class ExportBorrowRecordsCSV(View):
             due_date = record.due_date
             return_date = record.return_date if record.return_date else ''
             overdue = 'Yes' if not record.return_date and date.today() > due_date else 'No'
-            writer.writerow([student_name, title, borrow_date, due_date, return_date, overdue])
+            fine = Fine.objects.filter(borrow_record=record).first()
+            fine_amount = fine.amount if fine else 0
+            paid_status = 'Yes' if fine and fine.paid else 'No'
+            writer.writerow([student_name, title, borrow_date, due_date, return_date, overdue, fine_amount, paid_status])
         return response
 
 
@@ -287,3 +290,47 @@ class SendDueRemindersView(View):
 
         messages.success(request, '✅ Due reminders sent successfully.')
         return redirect('books:book_list')
+
+@method_decorator(staff_member_required, name='dispatch')
+class UploadBulkBooksView(View):
+    def get(self, request):
+        return render(request, 'books/upload_bulk_books.html')
+
+    def post(self, request):
+        csv_file = request.FILES.get('csv_file')
+        if not csv_file:
+            messages.error(request, '❌ No file uploaded.')
+            return redirect('books:upload_bulk_books')
+
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, '❌ File is not CSV.')
+            return redirect('books:upload_bulk_books')
+
+        try:
+            decoded_file = csv_file.read().decode('utf-8')
+            io_string = io.StringIO(decoded_file)
+            reader = csv.DictReader(io_string)
+            for row in reader:
+                title = row.get('title')
+                isbn = row.get('isbn')
+                authors = row.get('authors', '').split(',')
+                category = row.get('category')
+
+                if not title or not isbn:
+                    continue
+
+                book, created = Book.objects.get_or_create(title=title, isbn=isbn)
+                for name in authors:
+                    author_obj, _ = book.authors.get_or_create(name=name.strip())
+                if category:
+                    from books.models import Category
+                    cat_obj, _ = Category.objects.get_or_create(name=category)
+                    book.category = cat_obj
+                book.save()
+
+            messages.success(request, '✅ Books uploaded successfully.')
+            return redirect('books:book_list')
+
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+            return redirect('books:upload_bulk_books')

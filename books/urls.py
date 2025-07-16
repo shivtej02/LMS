@@ -12,9 +12,8 @@ from .views import (
     ExportBooksCSV,
     UserDashboardView,
     ExportBorrowRecordsCSV,
-    BookDetailView  # 👉 याला जरूर import कर
+    BookDetailView,
 )
-
 app_name = 'books'
 
 urlpatterns = [
@@ -30,5 +29,5 @@ urlpatterns = [
     path('export-books/', ExportBooksCSV.as_view(), name='export_books'),
     path('dashboard/', UserDashboardView.as_view(), name='user_dashboard'),
     path('export/borrow-records/', ExportBorrowRecordsCSV.as_view(), name='export_borrow_records'),
-    path('book/<int:book_id>/detail/', BookDetailView.as_view(), name='book_detail'),  # ✅ Corrected
+    path('book/<int:book_id>/detail/', BookDetailView.as_view(), name='book_detail'),  
 ]

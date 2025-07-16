@@ -4,10 +4,11 @@ from django.contrib import messages
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView, FormView
-
+import csv, io
 from .models import SubscriptionPlan, StudentSubscription, Fine, BulkUpload
 from iam.models import Student
 from .forms import FinePaymentForm
+from books.models import Book, Author, Category, BookCopy 
 
 # 🔹 Select Subscription Plan
 class SelectSubscriptionPlanView(LoginRequiredMixin, View):
@@ -97,7 +98,7 @@ class PayFineView(LoginRequiredMixin, FormView):
             messages.error(self.request, '❌ Fine record not found.')
         return redirect('subscription:pay_fine')
 
-# 🔹 Upload Bulk Books (for Staff Only)
+# ✅🔹 Upload Bulk Books (with CSV Parsing)
 class UploadBulkBooksView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         return hasattr(self.request.user, 'userprofile') and hasattr(self.request.user.userprofile, 'staffprofile')
@@ -107,9 +108,49 @@ class UploadBulkBooksView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request):
         uploaded_file = request.FILES.get('upload_file')
-        if uploaded_file:
-            staff_profile = request.user.userprofile.staffprofile
-            BulkUpload.objects.create(uploaded_by=staff_profile, upload_file=uploaded_file)
-            messages.success(request, '✅ File uploaded successfully.')
-            return redirect('subscription:upload_bulk_books')
-        return render(request, 'subscription/upload_bulk_books.html')
+        if not uploaded_file:
+            return render(request, 'subscription/upload_bulk_books.html', {'message': '❌ No file uploaded.'})
+
+        decoded_file = uploaded_file.read().decode('utf-8')
+        io_string = io.StringIO(decoded_file)
+        reader = csv.reader(io_string)
+        next(reader)  # Skip header row
+
+        added_books = 0
+        for row in reader:
+            try:
+                title, author_name, isbn, category_name, description, published_date, copies = row
+
+                # 🔸 Author
+                author, _ = Author.objects.get_or_create(name=author_name.strip())
+                
+                # 🔸 Category
+                category, _ = Category.objects.get_or_create(name=category_name.strip(), defaults={'location': 'Rack A'})
+
+                # 🔸 Book
+                book, created = Book.objects.get_or_create(
+                    title=title.strip(),
+                    isbn=isbn.strip(),
+                    defaults={
+                        'description': description.strip(),
+                        'published_date': published_date.strip(),
+                        'category': category
+                    }
+                )
+                book.authors.add(author)
+
+                # 🔸 Book Copies
+                if created:
+                    for i in range(int(copies)):
+                        BookCopy.objects.create(
+                            book=book,
+                            copy_id=f"{isbn.strip()}-{i+1}",
+                            status='available'
+                        )
+                added_books += 1
+
+            except Exception as e:
+                continue
+
+        messages.success(request, f'✅ Uploaded {added_books} books successfully.')
+        return redirect('subscription:upload_bulk_books')

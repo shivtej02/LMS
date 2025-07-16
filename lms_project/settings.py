@@ -12,19 +12,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
-# ✅ Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ✅ Secret key for development (DO NOT use in production)
 SECRET_KEY = 'django-insecure-%*+&%!7=od!tsd2z^jdc15@-u7r(7y(y7x8$wvk^a*+@2-5@-v'
 
-# ✅ Debug mode
 DEBUG = True
 
-# ✅ Allowed hosts (keep empty in development)
 ALLOWED_HOSTS = []
 
-# ✅ Installed apps (Django + Your apps)
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,13 +28,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Your custom apps
     'books',
     'iam',
     'subscription',
 ]
 
-# ✅ Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -50,19 +43,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# ✅ Root URL configuration
 ROOT_URLCONF = 'lms_project.urls'
 
-# ✅ Templates settings
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # 👈 Global templates folder
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',  # 👈 Needed for login
+                'django.template.context_processors.request', 
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -70,10 +61,8 @@ TEMPLATES = [
     },
 ]
 
-# ✅ WSGI application
 WSGI_APPLICATION = 'lms_project.wsgi.application'
 
-# ✅ Database settings (SQLite by default)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -81,7 +70,6 @@ DATABASES = {
     }
 }
 
-# ✅ Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -97,27 +85,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# ✅ Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# ✅ Static files (CSS, JS, etc.)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static'  # 👉 You must create a folder named 'static'
+    BASE_DIR / 'static' 
 ]
 
-# ✅ Media files (for user-uploaded images like profile photos)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'  # 👉 You must create a folder named 'media'
-
-# ✅ Authentication redirects
+MEDIA_ROOT = BASE_DIR / 'media'  
 LOGIN_URL = '/iam/login/'
 LOGIN_REDIRECT_URL = '/iam/profile/'
 LOGOUT_REDIRECT_URL = '/iam/login/'
-
-# ✅ Default auto primary key field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

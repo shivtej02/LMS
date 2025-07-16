@@ -30,7 +30,7 @@ class BookModelTest(TestCase):
         self.copy = BookCopy.objects.create(
             book=self.book,
             status='available',
-            no_of_copies=2
+            no_of_copies='C001'
         )
 
     def test_book_creation(self):

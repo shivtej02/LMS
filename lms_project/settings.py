@@ -102,3 +102,13 @@ LOGIN_URL = '/iam/login/'
 LOGIN_REDIRECT_URL = '/iam/profile/'
 LOGOUT_REDIRECT_URL = '/iam/login/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Use Gmail or your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'          # तुमचा email
+EMAIL_HOST_PASSWORD = 'your-app-password'         # Gmail app password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

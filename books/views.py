@@ -10,11 +10,11 @@ from django.views.generic import TemplateView
 from django.db.models import Q
 from datetime import timedelta, date
 import csv
-import io  
+import io
 
-from .models import Book, BookCopy, BorrowRecord, Fine
-from iam.models import Student, UserProfile
-from subscription.models import StudentSubscription
+from .models import Book, BookCopy, BorrowRecord, Fine  # ✅ Models used for logic
+from iam.models import Student, UserProfile  # ✅ User identity
+from subscription.models import StudentSubscription  # ✅ Subscription data
 from django.contrib.auth.models import User
 
 class BookCopiesView(LoginRequiredMixin, View):
@@ -116,12 +116,19 @@ class BorrowBookView(LoginRequiredMixin, View):
         if date.today() > expiry_date:
             return render(request, 'books/error.html', {'message': '❌ Your subscription has expired.'})
 
+        # 🔄 Updated: Check for unpaid fines
+        unpaid_fines = Fine.objects.filter(borrow_record__student=student, paid=False)
+        if unpaid_fines.exists():
+            return render(request, 'books/error.html', {'message': '❌ You have unpaid fines. Please clear them before borrowing.'})
+
+        # 🔄 Updated: Check if student has reached book limit
         active_borrows = BorrowRecord.objects.filter(student=student, return_date__isnull=True).count()
         if active_borrows >= subscription.plan.max_books:
             return render(request, 'books/error.html', {
                 'message': f'❌ You have reached your limit of {subscription.plan.max_books} books.'
             })
 
+        # ✅ Borrowing is allowed, create record
         BorrowRecord.objects.create(
             student=student,
             book_copy=available_copy,
@@ -129,11 +136,39 @@ class BorrowBookView(LoginRequiredMixin, View):
             due_date=date.today() + timedelta(days=7),
         )
 
+# ✅ Feature: Send Email Reminder 1 day before due date
+def send_due_soon_reminders():
+    # उद्याचा दिवस
+    tomorrow = date.today() + timedelta(days=1)
+
+    # ज्यांचं due_date उद्या आहे आणि अजून return केलेलं नाही
+    due_soon = BorrowRecord.objects.filter(due_date=tomorrow, return_date__isnull=True)
+
+    for record in due_soon:
+        user = record.student.user_profile.user  # User object
+        email = user.email
+
+        if email:
+            send_mail(
+                subject='📅 Reminder: Book Due Tomorrow',
+                message=(
+                    f"Hi {user.username},\n\n"
+                    f'Your borrowed book "{record.book_copy.book.title}" is due tomorrow ({record.due_date}).\n'
+                    "Please return it on time to avoid fines.\n\n"
+                    "Thank you,\nLibrary Team"
+                ),
+                from_email='noreply@library.com', 
+                recipient_list=[email],
+                fail_silently=False
+            )
+
+
         available_copy.status = 'borrowed'
         available_copy.save()
 
         messages.success(request, '✅ Book borrowed successfully.')
         return redirect('books:book_list')
+
 
 
 class ReturnBookView(LoginRequiredMixin, View):

@@ -25,18 +25,15 @@ class SignupView(View):
 
         if user_form.is_valid() and profile_form.is_valid():
             user = user_form.save(commit=False)
-            user.set_password(user.password)
+            user.email = user_form.cleaned_data['email']  # ✅ Correct email save
             user.save()
 
             profile = profile_form.save(commit=False)
             profile.user = user
             profile.save()
 
-            user.email = profile.email
-            user.save()
-
             login(request, user)
-            messages.success(request, "🎉 Signup successful. Welcome!")
+            messages.success(request, "✅ Signup successful.")
             return redirect('iam:profile')
         else:
             messages.error(request, "⚠️ Please correct the errors below.")
@@ -46,7 +43,7 @@ class SignupView(View):
             })
 
 
-# ✅ 2️⃣ User Profile View - Class Based
+# ✅ 2️⃣ User Profile View
 class UserProfileView(LoginRequiredMixin, View):
     def get(self, request):
         try:
@@ -61,7 +58,7 @@ class UserProfileView(LoginRequiredMixin, View):
         })
 
 
-# ✅ 3️⃣ Edit Profile View - Class Based
+# ✅ 3️⃣ Edit Profile View
 class EditProfileView(LoginRequiredMixin, View):
     def get(self, request):
         user_profile = get_object_or_404(UserProfile, user=request.user)
@@ -79,12 +76,13 @@ class EditProfileView(LoginRequiredMixin, View):
         profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
 
         if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            profile = profile_form.save(commit=False)
-            profile.save()
+            user = user_form.save(commit=False)
+            user.email = user_form.cleaned_data['email']  # ✅ Correct email update
+            user.save()
 
-            request.user.email = profile.email
-            request.user.save()
+            profile = profile_form.save(commit=False)
+            profile.user = user
+            profile.save()
 
             messages.success(request, "✅ Profile updated successfully.")
             return redirect('iam:profile')

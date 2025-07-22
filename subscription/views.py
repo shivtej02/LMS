@@ -1,3 +1,4 @@
+from .custom_email_tasks import send_due_soon_reminders, send_overdue_reminders
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
@@ -101,33 +102,45 @@ class PayFineView(LoginRequiredMixin, FormView):
 # ✅🔹 Upload Bulk Books (with CSV Parsing)
 class UploadBulkBooksView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return hasattr(self.request.user, 'userprofile') and hasattr(self.request.user.userprofile, 'staffprofile')
+        user = self.request.user
+        is_staff_user = hasattr(user, 'userprofile') and hasattr(user.userprofile, 'staffprofile')
+        return is_staff_user or user.is_superuser  # Allow staff OR admin
+
+    def handle_uploaded_file(self, uploaded_file):
+        decoded_file = uploaded_file.read().decode('utf-8')
+        io_string = io.StringIO(decoded_file)
+        reader = csv.reader(io_string)
+        next(reader)  # skip header row
+        return reader
 
     def get(self, request):
         return render(request, 'subscription/upload_bulk_books.html')
 
     def post(self, request):
-        uploaded_file = request.FILES.get('upload_file')
-        if not uploaded_file:
-            return render(request, 'subscription/upload_bulk_books.html', {'message': '❌ No file uploaded.'})
+        if not request.FILES.get('upload_file'):
+            return render(request, 'subscription/upload_bulk_books.html', {
+                'message': '❌ Please upload a valid CSV file.'
+            })
 
-        decoded_file = uploaded_file.read().decode('utf-8')
-        io_string = io.StringIO(decoded_file)
-        reader = csv.reader(io_string)
-        next(reader)  # Skip header row
+        uploaded_file = request.FILES['upload_file']
+
+        try:
+            reader = self.handle_uploaded_file(uploaded_file)
+        except Exception as e:
+            return render(request, 'subscription/upload_bulk_books.html', {
+                'message': f'❌ Failed to read uploaded file: {str(e)}'
+            })
 
         added_books = 0
         for row in reader:
             try:
                 title, author_name, isbn, category_name, description, published_date, copies = row
 
-                # 🔸 Author
                 author, _ = Author.objects.get_or_create(name=author_name.strip())
-                
-                # 🔸 Category
-                category, _ = Category.objects.get_or_create(name=category_name.strip(), defaults={'location': 'Rack A'})
+                category, _ = Category.objects.get_or_create(
+                    name=category_name.strip(), defaults={'location': 'Rack A'}
+                )
 
-                # 🔸 Book
                 book, created = Book.objects.get_or_create(
                     title=title.strip(),
                     isbn=isbn.strip(),
@@ -137,9 +150,9 @@ class UploadBulkBooksView(LoginRequiredMixin, UserPassesTestMixin, View):
                         'category': category
                     }
                 )
+
                 book.authors.add(author)
 
-                # 🔸 Book Copies
                 if created:
                     for i in range(int(copies)):
                         BookCopy.objects.create(
@@ -147,10 +160,32 @@ class UploadBulkBooksView(LoginRequiredMixin, UserPassesTestMixin, View):
                             copy_id=f"{isbn.strip()}-{i+1}",
                             status='available'
                         )
+
                 added_books += 1
 
             except Exception as e:
+                print(f"⚠️ Error processing row {row} → {e}")
                 continue
 
-        messages.success(request, f'✅ Uploaded {added_books} books successfully.')
+        messages.success(request, f'✅ Successfully uploaded {added_books} books.')
         return redirect('subscription:upload_bulk_books')
+
+# ✅🔹 Admin-triggered Reminder (Button) Views
+class TriggerDueReminderView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_superuser  # Admin only
+
+    def get(self, request):
+        send_due_soon_reminders()
+        messages.success(request, "📧 Sent due-date reminders for tomorrow.")
+        return redirect('subscription:my_subscription')
+
+
+class TriggerOverdueReminderView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_superuser  # Admin only
+
+    def get(self, request):
+        send_overdue_reminders()
+        messages.success(request, "⚠️ Sent overdue reminders for books overdue 3+ days.")
+        return redirect('subscription:my_subscription')

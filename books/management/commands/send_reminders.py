@@ -17,11 +17,15 @@ class Command(BaseCommand):
 
         for record in due_records:
             student = record.student
-            user = student.user_profile.user  # ✅ correct structure
-            email = user.email
+            user = student.user_profile.user  # ✅ user fetched from UserProfile
+
+            email = getattr(user, 'email', None)
+            print(f"Checking email for student ID {student.id}: {email}")
 
             if not email:
-                self.stdout.write(f"⚠️ Skipped: No email found for student ID {student.id}")
+                self.stdout.write(
+                    f"⚠️ Skipped: No email found for student ID {student.id}, username: {user.username}"
+                )
                 continue
 
             first_name = user.first_name

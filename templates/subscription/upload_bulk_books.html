@@ -55,19 +55,16 @@
   <div class="upload-container">
     <h2>📚 Upload Bulk Books (Staff Only)</h2>
 
-    <!-- ✅ Show success messages from Django -->
     {% if messages %}
       {% for message in messages %}
         <p class="message">✅ {{ message }}</p>
       {% endfor %}
     {% endif %}
 
-    <!-- ❌ Show error message (if present) -->
     {% if message %}
       <p class="error">❌ {{ message }}</p>
     {% endif %}
 
-    <!-- 📤 Upload Form -->
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <input type="file" name="upload_file" accept=".csv, .xlsx, .xls" required>
